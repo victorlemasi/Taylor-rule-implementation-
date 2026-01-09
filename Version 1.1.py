@@ -1,31 +1,41 @@
 import MetaTrader5 as mt5
-import requests
 import time
 
-# MetaTrader 5 Initialization
-mt5.initialize()
+# MetaTrader 5 Initialization and Login
+if not mt5.initialize():
+    print("initialize() failed, error code =", mt5.last_error())
+    quit()
 
-# Function to get the latest economic data (CPI, Unemployment, NFP, GDP, etc.)
+# Login to MT5 account
+authorized = mt5.login(
+    login=101097885,
+    password="@0LxWoGe",
+    server="MetaQuotes-Demo"
+)
+
+if not authorized:
+    print("Failed to connect to account #101097885, error code:", mt5.last_error())
+    mt5.shutdown()
+    quit()
+else:
+    print("Connected to account #101097885")
+
+# Function to get economic data from user input
 def get_economic_data():
-    url = "https://api.tradingeconomics.com/historical/country/united-states"
-    params = {"c": "YOUR_API_KEY"}  # Replace with your Trading Economics API key
-    response = requests.get(url, params=params)
-    
-    if response.status_code == 200:
-        data = response.json()
-        
-        # Extract the latest data for various indicators
-        latest_cpi = data[0]['value']  # Consumer Price Index (CPI)
-        latest_unemployment = data[1]['value']  # Unemployment Rate
-        latest_nfp = data[2]['value']  # Non-Farm Payrolls (NFP)
-        latest_gdp_growth = data[3]['value']  # GDP Growth Rate
-        latest_core_pce = data[4]['value']  # Core PCE Inflation
-        latest_retail_sales = data[5]['value']  # Retail Sales
-        latest_consumer_confidence = data[6]['value']  # Consumer Confidence Index (CCI)
+    print("\n--- Enter Economic Data ---")
+    try:
+        latest_cpi = float(input("Enter latest CPI (Consumer Price Index): "))
+        latest_unemployment = float(input("Enter latest Unemployment Rate (%): "))
+        latest_nfp = float(input("Enter latest NFP (Non-Farm Payrolls): "))
+        latest_gdp_growth = float(input("Enter latest GDP Growth Rate (%): "))
+        # These are optional/extra for the current decision logic but asked for consistency
+        latest_core_pce = float(input("Enter latest Core PCE Inflation (or 0 if unknown): "))
+        latest_retail_sales = float(input("Enter latest Retail Sales (or 0 if unknown): "))
+        latest_consumer_confidence = float(input("Enter Consumer Confidence Index (or 0 if unknown): "))
         
         return latest_cpi, latest_unemployment, latest_nfp, latest_gdp_growth, latest_core_pce, latest_retail_sales, latest_consumer_confidence
-    else:
-        print("Failed to fetch economic data.")
+    except ValueError:
+        print("Invalid input. Please enter numeric values.")
         return None, None, None, None, None, None, None
 
 # Refined Taylor Rule-based decision function
