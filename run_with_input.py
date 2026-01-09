@@ -16,7 +16,7 @@ input_str = "\n".join(inputs) + "\n"
 
 print("Starting bot with automated inputs...")
 process = subprocess.Popen(
-    ['python', 'Version 1.1.py'],
+    ['python', 'taylor.py'],
     stdin=subprocess.PIPE,
     stdout=subprocess.PIPE,
     stderr=subprocess.PIPE,
