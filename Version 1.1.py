@@ -96,7 +96,18 @@ def execute_trade(action, symbol="EURUSD", lot_size=0.1):
     Executes a trade on MetaTrader 5 based on the Buy/Sell signal from the strategy.
     """
     if action == "BUY":
-        price = mt5.symbol_info_tick(symbol).ask
+        symbol_info = mt5.symbol_info(symbol)
+        if symbol_info is None:
+            print(f"Symbol {symbol} not found, can not call order_check()")
+            return
+
+        if not symbol_info.visible:
+            print(f"Symbol {symbol} is not visible, trying to switch on")
+            if not mt5.symbol_select(symbol, True):
+                print(f"symbol_select({symbol}) failed, exit")
+                return
+
+        price = symbol_info.ask
         order = mt5.ORDER_TYPE_BUY
         request = {
             "action": mt5.TRADE_ACTION_DEAL,
@@ -111,13 +122,27 @@ def execute_trade(action, symbol="EURUSD", lot_size=0.1):
             "type_time": mt5.ORDER_TIME_GTC
         }
         result = mt5.order_send(request)
-        if result.retcode != mt5.TRADE_RETCODE_DONE:
+        
+        if result is None:
+             print(f"Order send failed. Result is None. Error: {mt5.last_error()}")
+        elif result.retcode != mt5.TRADE_RETCODE_DONE:
             print(f"Failed to place BUY order: {result.comment}")
         else:
             print("Buy order executed.")
     
     elif action == "SELL":
-        price = mt5.symbol_info_tick(symbol).bid
+        symbol_info = mt5.symbol_info(symbol)
+        if symbol_info is None:
+            print(f"Symbol {symbol} not found, can not call order_check()")
+            return
+
+        if not symbol_info.visible:
+            print(f"Symbol {symbol} is not visible, trying to switch on")
+            if not mt5.symbol_select(symbol, True):
+                print(f"symbol_select({symbol}) failed, exit")
+                return
+
+        price = symbol_info.bid
         order = mt5.ORDER_TYPE_SELL
         request = {
             "action": mt5.TRADE_ACTION_DEAL,
@@ -132,7 +157,10 @@ def execute_trade(action, symbol="EURUSD", lot_size=0.1):
             "type_time": mt5.ORDER_TIME_GTC
         }
         result = mt5.order_send(request)
-        if result.retcode != mt5.TRADE_RETCODE_DONE:
+        
+        if result is None:
+            print(f"Order send failed. Result is None. Error: {mt5.last_error()}")
+        elif result.retcode != mt5.TRADE_RETCODE_DONE:
             print(f"Failed to place SELL order: {result.comment}")
         else:
             print("Sell order executed.")
